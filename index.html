@@ -44,6 +44,12 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--font);min-hei
 .month-sel{font-size:14px;font-weight:500;padding:7px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;box-shadow:var(--shadow)}
 .tc-wrap{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2)}
 .tc-wrap input{width:68px;font-size:13px;padding:6px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);color:var(--text);text-align:right}
+.sync-bar{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-bottom:12px;padding:8px 12px;background:var(--card);border-radius:var(--radius-sm);border:1px solid var(--border2)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
+.sync-dot.ok{background:var(--green)}.sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite}
+.sync-dot.error{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sync-txt{flex:1}.sync-time{font-size:11px;color:var(--text3)}
 .metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 .metrics-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
 .met{background:var(--card);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow);border:1px solid var(--border2)}
@@ -91,7 +97,7 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--font);min-hei
 .ci-check{width:20px;height:20px;cursor:pointer;accent-color:var(--green);flex-shrink:0}
 .ibtn{background:none;border:none;cursor:pointer;padding:6px;border-radius:var(--radius-sm);font-size:15px;color:var(--text2);line-height:1;transition:all .15s}
 .ibtn:hover,.ibtn:active{background:var(--bg2)}
-.ibtn.del:active{color:var(--red)}.ibtn.edit:active{color:var(--blue)}.ibtn.save:active{color:var(--green)}
+.ibtn.del:active{color:var(--red)}.ibtn.edit:active{color:var(--blue)}
 .add-form{margin-top:12px;padding-top:12px;border-top:1px solid var(--border2)}
 .form-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
 .form-row input,.form-row select{font-size:14px;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);outline:none;transition:border-color .2s}
@@ -122,7 +128,7 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--font);min-hei
 .edit-actions{display:flex;gap:8px;margin-top:8px}
 .btn-save{flex:1;padding:9px;font-size:13px;font-weight:600;border-radius:var(--radius-sm);border:none;background:var(--green);color:#fff;cursor:pointer}
 .btn-cancel{padding:9px 16px;font-size:13px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
-.data-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.data-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
 .data-btn{flex:1;min-width:100px;padding:9px 10px;font-size:13px;font-weight:500;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:var(--shadow)}
 .data-btn:active{opacity:.8}
 .data-btn.excel{background:var(--green-bg);color:var(--green);border-color:var(--green)}
@@ -141,14 +147,21 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--font);min-hei
     <select id="monthSel"></select>
   </div>
 
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
     <div class="tc-wrap"><span>TC $1 =</span><input type="number" id="tcInput" value="450" min="1" step="1"/><span>₡</span></div>
-    <div class="data-bar" style="margin:0">
-      <button class="data-btn excel" onclick="exportXLSX()"><i class="ti ti-file-spreadsheet"></i> Excel</button>
-      <button class="data-btn" onclick="exportJSON()"><i class="ti ti-download"></i> Backup</button>
-      <button class="data-btn" onclick="document.getElementById('importFile').click()"><i class="ti ti-upload"></i> Importar</button>
-      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)"/>
-    </div>
+  </div>
+
+  <div class="sync-bar">
+    <div class="sync-dot" id="syncDot"></div>
+    <div class="sync-txt" id="syncTxt">Conectando...</div>
+    <div class="sync-time" id="syncTime"></div>
+  </div>
+
+  <div class="data-bar">
+    <button class="data-btn excel" onclick="exportXLSX()"><i class="ti ti-file-spreadsheet"></i> Excel</button>
+    <button class="data-btn" onclick="exportJSON()"><i class="ti ti-download"></i> Backup</button>
+    <button class="data-btn" onclick="document.getElementById('importFile').click()"><i class="ti ti-upload"></i> Importar</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)"/>
   </div>
 
   <div class="metrics-grid">
@@ -249,6 +262,55 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--font);min-hei
 <div class="toast" id="toast"></div>
 
 <script>
+// ─── SUPABASE CONFIG ───────────────────────────────────────────
+const SUPABASE_URL='https://ukmkhilajucolujqygdx.supabase.co';
+const SUPABASE_KEY='sb_publishable_vA5HGJn-k2jF5SNV7BziQg_fbOUy0J1';
+const TABLE='trackerdata';
+
+async function sbGet(clave){
+  const res=await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?clave=eq.${encodeURIComponent(clave)}&select=valor`,{
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+  });
+  const rows=await res.json();
+  return rows&&rows.length?JSON.parse(rows[0].valor):null;
+}
+
+async function sbSet(clave,valor){
+  const body=JSON.stringify({clave,valor:JSON.stringify(valor)});
+  // upsert
+  const res=await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?clave=eq.${encodeURIComponent(clave)}`,{
+    method:'GET',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+  });
+  const rows=await res.json();
+  if(rows&&rows.length){
+    await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?clave=eq.${encodeURIComponent(clave)}`,{
+      method:'PATCH',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+      body
+    });
+  } else {
+    await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`,{
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body
+    });
+  }
+}
+
+// ─── SYNC STATE ────────────────────────────────────────────────
+function setSyncStatus(status,msg){
+  const dot=document.getElementById('syncDot');
+  const txt=document.getElementById('syncTxt');
+  dot.className='sync-dot '+status;
+  txt.textContent=msg;
+  if(status==='ok'){
+    const t=new Date();
+    document.getElementById('syncTime').textContent='Última sync: '+t.toLocaleTimeString('es-CR',{hour:'2-digit',minute:'2-digit'});
+  }
+}
+
+// ─── DATA ──────────────────────────────────────────────────────
 const MONTHS=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const MONTHS_S=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const IVA=0.13;
@@ -280,9 +342,39 @@ const ESTADO_LABELS={confirmado:{label:'Confirmado',cls:'b-conf'},noconfirmado:{
 const now=new Date();
 let cy=now.getFullYear(),cm=now.getMonth(),tc=450;
 let data={};
-try{const s=localStorage.getItem('tracker_freelance');if(s)data=JSON.parse(s);}catch(e){}
+let saveTimer=null;
 
-function save(){try{localStorage.setItem('tracker_freelance',JSON.stringify(data));}catch(e){}}
+// Carga inicial desde Supabase
+async function loadFromCloud(){
+  setSyncStatus('syncing','Cargando datos...');
+  try{
+    const cloudData=await sbGet('all_data');
+    if(cloudData){data=cloudData;}
+    setSyncStatus('ok','Sincronizado ✓');
+  } catch(e){
+    setSyncStatus('error','Sin conexión — modo local');
+    // fallback a localStorage
+    try{const s=localStorage.getItem('tracker_freelance');if(s)data=JSON.parse(s);}catch(e2){}
+  }
+  render();
+}
+
+async function save(){
+  // Guardar en localStorage inmediato
+  try{localStorage.setItem('tracker_freelance',JSON.stringify(data));}catch(e){}
+  // Guardar en Supabase con debounce de 1.5s
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    setSyncStatus('syncing','Guardando...');
+    try{
+      await sbSet('all_data',data);
+      setSyncStatus('ok','Sincronizado ✓');
+    } catch(e){
+      setSyncStatus('error','Error al guardar — datos en local');
+    }
+  },1500);
+}
+
 function key(y,m){return `${y??cy}-${String((m??cm)+1).padStart(2,'0')}`;}
 function getM(y,m){
   const k=key(y,m);
@@ -291,12 +383,12 @@ function getM(y,m){
   if(!data[k].fixedPaid)data[k].fixedPaid={};
   return data[k];
 }
+
 function toast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2200);
 }
-function fmtCRC(n){return Math.round(n);}
 function fmtCRCStr(n){return '₡'+Math.round(n).toLocaleString('es-CR');}
 function fmtOrig(a,mon){return mon==='USD'?'$'+Number(a).toLocaleString('en-US'):fmtCRCStr(a);}
 function toCol(a,mon){return mon==='USD'?Math.round(a*tc):a;}
@@ -530,37 +622,20 @@ function addVar(){
   save();render();toast('Gasto agregado ✓');
 }
 
-// ─── EXCEL EXPORT ──────────────────────────────────────────────
-function crcStr(n){return n>0?'₡'+Math.round(n).toLocaleString('es-CR'):'₡0';}
-
-function xlsStyle(opts){
-  return {
-    font:{name:'Arial',sz:opts.sz||10,bold:!!opts.bold,color:{rgb:opts.color||'000000'}},
-    fill:opts.fill?{patternType:'solid',fgColor:{rgb:opts.fill}}:{patternType:'none'},
-    alignment:{horizontal:opts.align||'left',vertical:'center',wrapText:!!opts.wrap},
-    border:{
-      top:{style:'thin',color:{rgb:'DDDDDD'}},bottom:{style:'thin',color:{rgb:'DDDDDD'}},
-      left:{style:'thin',color:{rgb:'DDDDDD'}},right:{style:'thin',color:{rgb:'DDDDDD'}}
-    }
-  };
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`tracker-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();toast('Backup descargado ✓');
 }
-
-function makeCell(v,opts){return {v,t:opts&&opts.num?'n':'s',s:xlsStyle(opts||{})};}
-
-function addSheetFromRows(wb,sheetName,rows,colWidths){
-  const ws={};let maxR=0,maxC=0;
-  rows.forEach((row,r)=>{
-    row.forEach((cell,c)=>{
-      if(!cell)return;
-      const ref=XLSX.utils.encode_cell({r,c});
-      ws[ref]=cell;
-      if(c>maxC)maxC=c;
-    });
-    if(r>maxR)maxR=r;
-  });
-  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:maxR,c:maxC}});
-  ws['!cols']=colWidths.map(w=>({wch:w}));
-  XLSX.utils.book_append_sheet(wb,ws,sheetName);
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=async ev=>{
+    try{data=JSON.parse(ev.target.result);await save();render();toast('Datos importados ✓');}
+    catch(e){toast('Error: archivo inválido');}
+  };
+  r.readAsText(file);e.target.value='';
 }
 
 function exportXLSX(){
@@ -569,215 +644,52 @@ function exportXLSX(){
   const t=calcMonth(cy,cm);
   const m=getM();
   const fx=getFixed(cy,cm).filter(r=>r.active);
-
-  // ── Colores ──
   const C_HEADER='1E3A5F',C_HEADER2='2D6A4F',C_HEADER3='7B3F00',C_HEADER4='4A235A';
-  const C_TITLE='F0F4FA',C_SUB='E8F5EE',C_AMBER='FFF8E7',C_PURP='F3F0FA';
-  const C_POS='155724',C_NEG='7B1010',C_MUTED='777777',C_WHITE='FFFFFF';
-  const C_STRIPE='F9F9F7',C_GREEN_LIGHT='D4EFDF',C_RED_LIGHT='FADADD',C_AMBER_LIGHT='FDEBD0';
-
-  // ═══════════════════════════════════════
-  // HOJA 1: RESUMEN DEL MES
-  // ═══════════════════════════════════════
-  const balReal=t.cob-t.gPag;
-  const balOpt=t.cob+t.pend-(t.gPag+t.gPend);
-  const pctGastado=t.cob>0?Math.round((t.gPag/t.cob)*100):0;
-
-  const resRows=[
-    [makeCell('REPORTE MENSUAL — '+mesNombre.toUpperCase(),{bold:true,sz:14,color:C_WHITE,fill:C_HEADER,align:'center'})],
-    [makeCell('')],
-    [makeCell('RESUMEN FINANCIERO',{bold:true,sz:11,color:C_WHITE,fill:C_HEADER,align:'center'})],
-    [makeCell('Concepto',{bold:true,sz:10,color:C_WHITE,fill:C_HEADER}),makeCell('Monto (₡)',{bold:true,sz:10,color:C_WHITE,fill:C_HEADER,align:'right'})],
-    [makeCell('Cobrado / recibido',{fill:C_STRIPE}),makeCell(t.cob,{num:true,color:C_POS,bold:true,fill:C_STRIPE,align:'right'})],
-    [makeCell('Por cobrar',{fill:C_AMBER_LIGHT}),makeCell(t.pend,{num:true,color:'885500',fill:C_AMBER_LIGHT,align:'right'})],
-    [makeCell('Gastos pagados',{fill:C_RED_LIGHT}),makeCell(t.gPag,{num:true,color:C_NEG,fill:C_RED_LIGHT,align:'right'})],
-    [makeCell('Gastos por pagar',{fill:C_STRIPE}),makeCell(t.gPend,{num:true,color:C_NEG,fill:C_STRIPE,align:'right'})],
-    [makeCell('IVA a pagar a Hacienda',{fill:C_RED_LIGHT}),makeCell(t.iva,{num:true,color:C_NEG,fill:C_RED_LIGHT,align:'right'})],
-    [makeCell('')],
-    [makeCell('Balance real (cobrado - gastos pagados)',{bold:true,fill:balReal>=0?C_GREEN_LIGHT:C_RED_LIGHT}),makeCell(balReal,{num:true,bold:true,color:balReal>=0?C_POS:C_NEG,fill:balReal>=0?C_GREEN_LIGHT:C_RED_LIGHT,align:'right'})],
-    [makeCell('Balance optimista (si todo lo pendiente entra)',{bold:true,fill:balOpt>=0?C_GREEN_LIGHT:C_RED_LIGHT}),makeCell(balOpt,{num:true,bold:true,color:balOpt>=0?C_POS:C_NEG,fill:balOpt>=0?C_GREEN_LIGHT:C_RED_LIGHT,align:'right'})],
-    [makeCell('% de lo cobrado usado en gastos',{fill:C_STRIPE}),makeCell(pctGastado+'%',{fill:C_STRIPE,align:'right',color:pctGastado>90?C_NEG:pctGastado>65?'885500':C_POS})],
-    [makeCell('')],
-    [makeCell('Tipo de cambio usado',{fill:C_STRIPE,color:C_MUTED}),makeCell('$1 = ₡'+tc,{fill:C_STRIPE,color:C_MUTED,align:'right'})],
-    [makeCell('Generado',{fill:C_STRIPE,color:C_MUTED}),makeCell(new Date().toLocaleDateString('es-CR'),{fill:C_STRIPE,color:C_MUTED,align:'right'})],
-  ];
-  addSheetFromRows(wb,'Resumen',resRows,[38,22]);
-
-  // ═══════════════════════════════════════
-  // HOJA 2: PROYECTOS
-  // ═══════════════════════════════════════
-  const projHeaders=[
-    makeCell('PROYECTOS — '+mesNombre.toUpperCase(),{bold:true,sz:13,color:C_WHITE,fill:C_HEADER2,align:'center'}),
-    makeCell('',{fill:C_HEADER2}),makeCell('',{fill:C_HEADER2}),makeCell('',{fill:C_HEADER2}),
-    makeCell('',{fill:C_HEADER2}),makeCell('',{fill:C_HEADER2}),makeCell('',{fill:C_HEADER2}),
-  ];
-  const projColH=[
-    makeCell('Cliente / Proyecto',{bold:true,color:C_WHITE,fill:C_HEADER2}),
-    makeCell('Fechas',{bold:true,color:C_WHITE,fill:C_HEADER2}),
-    makeCell('Estado',{bold:true,color:C_WHITE,fill:C_HEADER2}),
-    makeCell('Propuesta',{bold:true,color:C_WHITE,fill:C_HEADER2,align:'right'}),
-    makeCell('Moneda',{bold:true,color:C_WHITE,fill:C_HEADER2}),
-    makeCell('Pago',{bold:true,color:C_WHITE,fill:C_HEADER2}),
-    makeCell('Recibido (₡)',{bold:true,color:C_WHITE,fill:C_HEADER2,align:'right'}),
-    makeCell('IVA generado (₡)',{bold:true,color:C_WHITE,fill:C_HEADER2,align:'right'}),
-    makeCell('Factura',{bold:true,color:C_WHITE,fill:C_HEADER2}),
-    makeCell('Notas',{bold:true,color:C_WHITE,fill:C_HEADER2}),
-  ];
-  const projRows=[projHeaders,[...projColH]];
-  m.proyectos.forEach((p,i)=>{
-    const c=calcP(p);const fill=i%2===0?C_WHITE:C_STRIPE;
-    const estadoLabel=ESTADO_LABELS[p.estado]?.label||p.estado;
-    const pagoLabel=PAGO_LABELS[p.pago]?.label||p.pago;
-    const pagoFill=p.pago==='completo'?C_GREEN_LIGHT:p.pago==='medio'?C_AMBER_LIGHT:C_RED_LIGHT;
-    projRows.push([
-      makeCell(p.nombre,{fill,bold:true}),
-      makeCell(p.fechas||'',{fill}),
-      makeCell(estadoLabel,{fill}),
-      makeCell(p.monto,{num:true,fill,align:'right'}),
-      makeCell(p.moneda||'CRC',{fill}),
-      makeCell(pagoLabel,{fill:pagoFill,color:p.pago==='completo'?C_POS:p.pago==='medio'?'885500':C_NEG}),
-      makeCell(c.rec,{num:true,fill,color:C_POS,bold:true,align:'right'}),
-      makeCell(c.iva,{num:true,fill,color:c.iva>0?C_NEG:C_MUTED,align:'right'}),
-      makeCell(p.factura?'Sí':'No',{fill}),
-      makeCell(p.nota||'',{fill,color:C_MUTED,wrap:true}),
-    ]);
-  });
-  // Totales proyectos
-  const totProy=m.proyectos.reduce((a,p)=>{const c=calcP(p);a.rec+=c.rec;a.iva+=c.iva;return a;},{rec:0,iva:0});
-  projRows.push([
-    makeCell('TOTAL',{bold:true,fill:C_HEADER2,color:C_WHITE}),
-    makeCell('',{fill:C_HEADER2}),makeCell('',{fill:C_HEADER2}),makeCell('',{fill:C_HEADER2}),makeCell('',{fill:C_HEADER2}),makeCell('',{fill:C_HEADER2}),
-    makeCell(totProy.rec,{num:true,bold:true,fill:C_HEADER2,color:C_WHITE,align:'right'}),
-    makeCell(totProy.iva,{num:true,bold:true,fill:C_HEADER2,color:C_WHITE,align:'right'}),
-    makeCell('',{fill:C_HEADER2}),makeCell('',{fill:C_HEADER2}),
-  ]);
-  if(!m.proyectos.length) projRows.push([makeCell('Sin proyectos este mes',{color:C_MUTED})]);
-  addSheetFromRows(wb,'Proyectos',projRows,[30,12,14,14,8,16,16,16,8,30]);
-
-  // ═══════════════════════════════════════
-  // HOJA 3: GASTOS
-  // ═══════════════════════════════════════
-  const gastRows=[
-    [makeCell('GASTOS — '+mesNombre.toUpperCase(),{bold:true,sz:13,color:C_WHITE,fill:C_HEADER3,align:'center'}),makeCell('',{fill:C_HEADER3}),makeCell('',{fill:C_HEADER3}),makeCell('',{fill:C_HEADER3})],
-    [makeCell('')],
-    [makeCell('GASTOS FIJOS',{bold:true,sz:11,color:C_WHITE,fill:C_HEADER3})],
-    [
-      makeCell('Concepto',{bold:true,color:C_WHITE,fill:C_HEADER3}),
-      makeCell('Monto (₡)',{bold:true,color:C_WHITE,fill:C_HEADER3,align:'right'}),
-      makeCell('Estado',{bold:true,color:C_WHITE,fill:C_HEADER3}),
-      makeCell('Nota',{bold:true,color:C_WHITE,fill:C_HEADER3}),
-    ],
-  ];
-  let totFijoPag=0,totFijoPend=0;
-  fx.forEach((r,i)=>{
-    const pagado=m.fixedPaid[r.id];
-    const fill=pagado?C_GREEN_LIGHT:(i%2===0?C_WHITE:C_STRIPE);
-    if(pagado)totFijoPag+=r.amt;else totFijoPend+=r.amt;
-    gastRows.push([
-      makeCell(r.name,{fill,bold:true}),
-      makeCell(r.amt,{num:true,fill,align:'right',color:pagado?C_POS:C_NEG}),
-      makeCell(pagado?'✓ Pagado':'Pendiente',{fill,color:pagado?C_POS:C_NEG,bold:true}),
-      makeCell(r.note||'',{fill,color:C_MUTED}),
-    ]);
-  });
-  gastRows.push([
-    makeCell('TOTAL FIJOS',{bold:true,fill:C_HEADER3,color:C_WHITE}),
-    makeCell(totFijoPag+totFijoPend,{num:true,bold:true,fill:C_HEADER3,color:C_WHITE,align:'right'}),
-    makeCell('Pagado: ₡'+Math.round(totFijoPag).toLocaleString('es-CR'),{fill:C_HEADER3,color:C_WHITE}),
-    makeCell('Pendiente: ₡'+Math.round(totFijoPend).toLocaleString('es-CR'),{fill:C_HEADER3,color:C_WHITE}),
-  ]);
-  gastRows.push([makeCell('')]);
-  gastRows.push([makeCell('GASTOS VARIABLES',{bold:true,sz:11,color:C_WHITE,fill:C_HEADER3})]);
-  gastRows.push([
-    makeCell('Descripción',{bold:true,color:C_WHITE,fill:C_HEADER3}),
-    makeCell('Monto (₡)',{bold:true,color:C_WHITE,fill:C_HEADER3,align:'right'}),
-    makeCell('Moneda original',{bold:true,color:C_WHITE,fill:C_HEADER3}),
-    makeCell('Estado',{bold:true,color:C_WHITE,fill:C_HEADER3}),
-  ]);
-  let totVarPag=0,totVarPend=0;
-  m.vars.forEach((v,i)=>{
-    const col=toCol(v.amount,v.moneda||'CRC');
-    const fill=v.paid?C_GREEN_LIGHT:(i%2===0?C_WHITE:C_STRIPE);
-    const origStr=(v.moneda==='USD')?'$'+v.amount:('₡'+Math.round(v.amount).toLocaleString('es-CR'));
-    if(v.paid)totVarPag+=col;else totVarPend+=col;
-    gastRows.push([
-      makeCell(v.desc,{fill,bold:true}),
-      makeCell(col,{num:true,fill,align:'right',color:v.paid?C_POS:C_NEG}),
-      makeCell(origStr+' ('+( v.moneda||'CRC')+')',{fill,color:C_MUTED}),
-      makeCell(v.paid?'✓ Pagado':'Pendiente',{fill,color:v.paid?C_POS:C_NEG,bold:true}),
-    ]);
-  });
-  if(!m.vars.length) gastRows.push([makeCell('Sin gastos variables',{color:C_MUTED})]);
-  gastRows.push([
-    makeCell('TOTAL VARIABLES',{bold:true,fill:C_HEADER3,color:C_WHITE}),
-    makeCell(totVarPag+totVarPend,{num:true,bold:true,fill:C_HEADER3,color:C_WHITE,align:'right'}),
-    makeCell('Pagado: ₡'+Math.round(totVarPag).toLocaleString('es-CR'),{fill:C_HEADER3,color:C_WHITE}),
-    makeCell('Pendiente: ₡'+Math.round(totVarPend).toLocaleString('es-CR'),{fill:C_HEADER3,color:C_WHITE}),
-  ]);
-  addSheetFromRows(wb,'Gastos',gastRows,[30,18,20,14]);
-
-  // ═══════════════════════════════════════
-  // HOJA 4: VISTA ANUAL
-  // ═══════════════════════════════════════
-  const anualRows=[
-    [makeCell('VISTA ANUAL — '+cy,{bold:true,sz:13,color:C_WHITE,fill:C_HEADER4,align:'center'}),makeCell('',{fill:C_HEADER4}),makeCell('',{fill:C_HEADER4}),makeCell('',{fill:C_HEADER4}),makeCell('',{fill:C_HEADER4}),makeCell('',{fill:C_HEADER4})],
-    [makeCell('')],
-    [
-      makeCell('Mes',{bold:true,color:C_WHITE,fill:C_HEADER4}),
-      makeCell('Cobrado (₡)',{bold:true,color:C_WHITE,fill:C_HEADER4,align:'right'}),
-      makeCell('Gastos pagados (₡)',{bold:true,color:C_WHITE,fill:C_HEADER4,align:'right'}),
-      makeCell('Balance (₡)',{bold:true,color:C_WHITE,fill:C_HEADER4,align:'right'}),
-      makeCell('IVA (₡)',{bold:true,color:C_WHITE,fill:C_HEADER4,align:'right'}),
-      makeCell('% Gastado',{bold:true,color:C_WHITE,fill:C_HEADER4,align:'right'}),
-    ],
-  ];
-  let anTotC=0,anTotG=0,anTotI=0;
-  for(let mo=0;mo<12;mo++){
-    const t2=calcMonth(cy,mo);
-    const b=t2.cob-t2.gPag;
-    const pct2=t2.cob>0?Math.round((t2.gPag/t2.cob)*100):0;
-    const isCur=mo===cm;
-    const fill=isCur?C_AMBER_LIGHT:(mo%2===0?C_WHITE:C_STRIPE);
-    anTotC+=t2.cob;anTotG+=t2.gPag;anTotI+=t2.iva;
-    anualRows.push([
-      makeCell(MONTHS[mo]+(isCur?' ◀ Mes actual':''),{fill,bold:isCur}),
-      makeCell(t2.cob,{num:true,fill,color:t2.cob>0?C_POS:C_MUTED,align:'right'}),
-      makeCell(t2.gPag,{num:true,fill,color:t2.gPag>0?C_NEG:C_MUTED,align:'right'}),
-      makeCell(b,{num:true,fill,color:b>=0?C_POS:C_NEG,bold:true,align:'right'}),
-      makeCell(t2.iva,{num:true,fill,color:t2.iva>0?C_NEG:C_MUTED,align:'right'}),
-      makeCell(t2.cob>0?pct2+'%':'—',{fill,align:'right',color:pct2>90?C_NEG:pct2>65?'885500':C_POS}),
-    ]);
-  }
-  const anBal=anTotC-anTotG;
-  anualRows.push([makeCell('')]);
-  anualRows.push([
-    makeCell('TOTAL AÑO',{bold:true,fill:C_HEADER4,color:C_WHITE}),
-    makeCell(anTotC,{num:true,bold:true,fill:C_HEADER4,color:C_WHITE,align:'right'}),
-    makeCell(anTotG,{num:true,bold:true,fill:C_HEADER4,color:C_WHITE,align:'right'}),
-    makeCell(anBal,{num:true,bold:true,fill:C_HEADER4,color:C_WHITE,align:'right'}),
-    makeCell(anTotI,{num:true,bold:true,fill:C_HEADER4,color:C_WHITE,align:'right'}),
-    makeCell('',{fill:C_HEADER4}),
-  ]);
-  addSheetFromRows(wb,'Vista Anual',anualRows,[18,20,22,18,16,12]);
-
-  // Guardar
-  const fecha=new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb,`tracker-${cy}-${String(cm+1).padStart(2,'0')}-${fecha}.xlsx`);
+  const C_GREEN_LIGHT='D4EFDF',C_RED_LIGHT='FADADD',C_AMBER_LIGHT='FDEBD0';
+  const C_STRIPE='F9F9F7',C_WHITE='FFFFFF',C_POS='155724',C_NEG='7B1010',C_MUTED='777777';
+  function xlsStyle(o){return{font:{name:'Arial',sz:o.sz||10,bold:!!o.bold,color:{rgb:o.color||'000000'}},fill:o.fill?{patternType:'solid',fgColor:{rgb:o.fill}}:{patternType:'none'},alignment:{horizontal:o.align||'left',vertical:'center',wrapText:!!o.wrap},border:{top:{style:'thin',color:{rgb:'DDDDDD'}},bottom:{style:'thin',color:{rgb:'DDDDDD'}},left:{style:'thin',color:{rgb:'DDDDDD'}},right:{style:'thin',color:{rgb:'DDDDDD'}}}};}
+  function mc(v,o){return{v,t:(o&&o.num)?'n':'s',s:xlsStyle(o||{})};}
+  function addSheet(wb,name,rows,widths){const ws={};let mr=0,mc2=0;rows.forEach((row,r)=>{row.forEach((cell,c)=>{if(!cell)return;ws[XLSX.utils.encode_cell({r,c})]=cell;if(c>mc2)mc2=c;});if(r>mr)mr=r;});ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:mr,c:mc2}});ws['!cols']=widths.map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,ws,name);}
+  const balReal=t.cob-t.gPag,balOpt=t.cob+t.pend-(t.gPag+t.gPend),pctG=t.cob>0?Math.round((t.gPag/t.cob)*100):0;
+  addSheet(wb,'Resumen',[
+    [mc('REPORTE — '+mesNombre.toUpperCase(),{bold:true,sz:14,color:C_WHITE,fill:C_HEADER,align:'center'})],
+    [mc('')],
+    [mc('Concepto',{bold:true,color:C_WHITE,fill:C_HEADER}),mc('Monto (₡)',{bold:true,color:C_WHITE,fill:C_HEADER,align:'right'})],
+    [mc('Cobrado / recibido',{fill:C_STRIPE}),mc(t.cob,{num:true,color:C_POS,bold:true,fill:C_STRIPE,align:'right'})],
+    [mc('Por cobrar',{fill:C_AMBER_LIGHT}),mc(t.pend,{num:true,color:'885500',fill:C_AMBER_LIGHT,align:'right'})],
+    [mc('Gastos pagados',{fill:C_RED_LIGHT}),mc(t.gPag,{num:true,color:C_NEG,fill:C_RED_LIGHT,align:'right'})],
+    [mc('Gastos por pagar',{fill:C_STRIPE}),mc(t.gPend,{num:true,color:C_NEG,fill:C_STRIPE,align:'right'})],
+    [mc('IVA a pagar',{fill:C_RED_LIGHT}),mc(t.iva,{num:true,color:C_NEG,fill:C_RED_LIGHT,align:'right'})],
+    [mc('')],
+    [mc('Balance real',{bold:true,fill:balReal>=0?C_GREEN_LIGHT:C_RED_LIGHT}),mc(balReal,{num:true,bold:true,color:balReal>=0?C_POS:C_NEG,fill:balReal>=0?C_GREEN_LIGHT:C_RED_LIGHT,align:'right'})],
+    [mc('Balance optimista',{bold:true,fill:balOpt>=0?C_GREEN_LIGHT:C_RED_LIGHT}),mc(balOpt,{num:true,bold:true,color:balOpt>=0?C_POS:C_NEG,fill:balOpt>=0?C_GREEN_LIGHT:C_RED_LIGHT,align:'right'})],
+    [mc('% cobrado usado en gastos',{fill:C_STRIPE}),mc(pctG+'%',{fill:C_STRIPE,align:'right',color:pctG>90?C_NEG:pctG>65?'885500':C_POS})],
+    [mc('')],
+    [mc('TC usado',{fill:C_STRIPE,color:C_MUTED}),mc('$1 = ₡'+tc,{fill:C_STRIPE,color:C_MUTED,align:'right'})],
+    [mc('Generado',{fill:C_STRIPE,color:C_MUTED}),mc(new Date().toLocaleDateString('es-CR'),{fill:C_STRIPE,color:C_MUTED,align:'right'})],
+  ],[38,22]);
+  const pH=[mc('Cliente',{bold:true,color:C_WHITE,fill:C_HEADER2}),mc('Fechas',{bold:true,color:C_WHITE,fill:C_HEADER2}),mc('Estado',{bold:true,color:C_WHITE,fill:C_HEADER2}),mc('Propuesta',{bold:true,color:C_WHITE,fill:C_HEADER2,align:'right'}),mc('Moneda',{bold:true,color:C_WHITE,fill:C_HEADER2}),mc('Pago',{bold:true,color:C_WHITE,fill:C_HEADER2}),mc('Recibido ₡',{bold:true,color:C_WHITE,fill:C_HEADER2,align:'right'}),mc('IVA ₡',{bold:true,color:C_WHITE,fill:C_HEADER2,align:'right'}),mc('Factura',{bold:true,color:C_WHITE,fill:C_HEADER2}),mc('Nota',{bold:true,color:C_WHITE,fill:C_HEADER2})];
+  const pRows=[[mc('PROYECTOS — '+mesNombre.toUpperCase(),{bold:true,sz:13,color:C_WHITE,fill:C_HEADER2,align:'center'})],[...pH]];
+  let tRec=0,tIva=0;
+  m.proyectos.forEach((p,i)=>{const c=calcP(p);const f=i%2===0?C_WHITE:C_STRIPE;const pf=p.pago==='completo'?C_GREEN_LIGHT:p.pago==='medio'?C_AMBER_LIGHT:C_RED_LIGHT;tRec+=c.rec;tIva+=c.iva;pRows.push([mc(p.nombre,{fill:f,bold:true}),mc(p.fechas||'',{fill:f}),mc(ESTADO_LABELS[p.estado]?.label||p.estado,{fill:f}),mc(p.monto,{num:true,fill:f,align:'right'}),mc(p.moneda||'CRC',{fill:f}),mc(PAGO_LABELS[p.pago]?.label||p.pago,{fill:pf}),mc(c.rec,{num:true,fill:f,color:C_POS,bold:true,align:'right'}),mc(c.iva,{num:true,fill:f,color:c.iva>0?C_NEG:C_MUTED,align:'right'}),mc(p.factura?'Sí':'No',{fill:f}),mc(p.nota||'',{fill:f,color:C_MUTED})]);});
+  if(!m.proyectos.length)pRows.push([mc('Sin proyectos',{color:C_MUTED})]);
+  pRows.push([mc('TOTAL',{bold:true,fill:C_HEADER2,color:C_WHITE}),mc('',{fill:C_HEADER2}),mc('',{fill:C_HEADER2}),mc('',{fill:C_HEADER2}),mc('',{fill:C_HEADER2}),mc('',{fill:C_HEADER2}),mc(tRec,{num:true,bold:true,fill:C_HEADER2,color:C_WHITE,align:'right'}),mc(tIva,{num:true,bold:true,fill:C_HEADER2,color:C_WHITE,align:'right'}),mc('',{fill:C_HEADER2}),mc('',{fill:C_HEADER2})]);
+  addSheet(wb,'Proyectos',pRows,[30,12,14,14,8,16,16,14,8,30]);
+  const gRows=[[mc('GASTOS — '+mesNombre.toUpperCase(),{bold:true,sz:13,color:C_WHITE,fill:C_HEADER3,align:'center'})],[mc('')],[mc('GASTOS FIJOS',{bold:true,color:C_WHITE,fill:C_HEADER3})],[mc('Concepto',{bold:true,color:C_WHITE,fill:C_HEADER3}),mc('Monto ₡',{bold:true,color:C_WHITE,fill:C_HEADER3,align:'right'}),mc('Estado',{bold:true,color:C_WHITE,fill:C_HEADER3}),mc('Nota',{bold:true,color:C_WHITE,fill:C_HEADER3})]];
+  let tfp=0,tfpend=0;fx.forEach((r,i)=>{const pg=m.fixedPaid[r.id];const f=pg?C_GREEN_LIGHT:(i%2===0?C_WHITE:C_STRIPE);if(pg)tfp+=r.amt;else tfpend+=r.amt;gRows.push([mc(r.name,{fill:f,bold:true}),mc(r.amt,{num:true,fill:f,align:'right',color:pg?C_POS:C_NEG}),mc(pg?'✓ Pagado':'Pendiente',{fill:f,color:pg?C_POS:C_NEG,bold:true}),mc(r.note||'',{fill:f,color:C_MUTED})]);});
+  gRows.push([mc('TOTAL FIJOS',{bold:true,fill:C_HEADER3,color:C_WHITE}),mc(tfp+tfpend,{num:true,bold:true,fill:C_HEADER3,color:C_WHITE,align:'right'}),mc('Pagado ₡'+Math.round(tfp).toLocaleString('es-CR'),{fill:C_HEADER3,color:C_WHITE}),mc('Pendiente ₡'+Math.round(tfpend).toLocaleString('es-CR'),{fill:C_HEADER3,color:C_WHITE})]);
+  gRows.push([mc('')],[mc('GASTOS VARIABLES',{bold:true,color:C_WHITE,fill:C_HEADER3})],[mc('Descripción',{bold:true,color:C_WHITE,fill:C_HEADER3}),mc('Monto ₡',{bold:true,color:C_WHITE,fill:C_HEADER3,align:'right'}),mc('Moneda original',{bold:true,color:C_WHITE,fill:C_HEADER3}),mc('Estado',{bold:true,color:C_WHITE,fill:C_HEADER3})]);
+  let tvp=0,tvpend=0;m.vars.forEach((v,i)=>{const col=toCol(v.amount,v.moneda||'CRC');const f=v.paid?C_GREEN_LIGHT:(i%2===0?C_WHITE:C_STRIPE);const orig=(v.moneda==='USD')?'$'+v.amount:'₡'+Math.round(v.amount).toLocaleString('es-CR');if(v.paid)tvp+=col;else tvpend+=col;gRows.push([mc(v.desc,{fill:f,bold:true}),mc(col,{num:true,fill:f,align:'right',color:v.paid?C_POS:C_NEG}),mc(orig+' ('+( v.moneda||'CRC')+')',{fill:f,color:C_MUTED}),mc(v.paid?'✓ Pagado':'Pendiente',{fill:f,color:v.paid?C_POS:C_NEG,bold:true})]);});
+  if(!m.vars.length)gRows.push([mc('Sin gastos variables',{color:C_MUTED})]);
+  gRows.push([mc('TOTAL VARIABLES',{bold:true,fill:C_HEADER3,color:C_WHITE}),mc(tvp+tvpend,{num:true,bold:true,fill:C_HEADER3,color:C_WHITE,align:'right'}),mc('Pagado ₡'+Math.round(tvp).toLocaleString('es-CR'),{fill:C_HEADER3,color:C_WHITE}),mc('Pendiente ₡'+Math.round(tvpend).toLocaleString('es-CR'),{fill:C_HEADER3,color:C_WHITE})]);
+  addSheet(wb,'Gastos',gRows,[30,18,20,14]);
+  const aRows=[[mc('VISTA ANUAL — '+cy,{bold:true,sz:13,color:C_WHITE,fill:C_HEADER4,align:'center'})],[mc('')],[mc('Mes',{bold:true,color:C_WHITE,fill:C_HEADER4}),mc('Cobrado ₡',{bold:true,color:C_WHITE,fill:C_HEADER4,align:'right'}),mc('Gastos ₡',{bold:true,color:C_WHITE,fill:C_HEADER4,align:'right'}),mc('Balance ₡',{bold:true,color:C_WHITE,fill:C_HEADER4,align:'right'}),mc('IVA ₡',{bold:true,color:C_WHITE,fill:C_HEADER4,align:'right'}),mc('% Gastado',{bold:true,color:C_WHITE,fill:C_HEADER4,align:'right'})]];
+  let ac=0,ag=0,ai=0;
+  for(let mo=0;mo<12;mo++){const t2=calcMonth(cy,mo);const b=t2.cob-t2.gPag;const p2=t2.cob>0?Math.round((t2.gPag/t2.cob)*100):0;const cur=mo===cm;const f=cur?C_AMBER_LIGHT:(mo%2===0?C_WHITE:C_STRIPE);ac+=t2.cob;ag+=t2.gPag;ai+=t2.iva;aRows.push([mc(MONTHS[mo]+(cur?' ◀':''),{fill:f,bold:cur}),mc(t2.cob,{num:true,fill:f,color:t2.cob>0?C_POS:C_MUTED,align:'right'}),mc(t2.gPag,{num:true,fill:f,color:t2.gPag>0?C_NEG:C_MUTED,align:'right'}),mc(b,{num:true,fill:f,color:b>=0?C_POS:C_NEG,bold:true,align:'right'}),mc(t2.iva,{num:true,fill:f,color:t2.iva>0?C_NEG:C_MUTED,align:'right'}),mc(t2.cob>0?p2+'%':'—',{fill:f,align:'right',color:p2>90?C_NEG:p2>65?'885500':C_POS})]);}
+  const ab=ac-ag;aRows.push([mc('')],[mc('TOTAL',{bold:true,fill:C_HEADER4,color:C_WHITE}),mc(ac,{num:true,bold:true,fill:C_HEADER4,color:C_WHITE,align:'right'}),mc(ag,{num:true,bold:true,fill:C_HEADER4,color:C_WHITE,align:'right'}),mc(ab,{num:true,bold:true,fill:C_HEADER4,color:C_WHITE,align:'right'}),mc(ai,{num:true,bold:true,fill:C_HEADER4,color:C_WHITE,align:'right'}),mc('',{fill:C_HEADER4})]);
+  addSheet(wb,'Vista Anual',aRows,[18,20,20,18,16,12]);
+  XLSX.writeFile(wb,`tracker-${cy}-${String(cm+1).padStart(2,'0')}-${new Date().toISOString().slice(0,10)}.xlsx`);
   toast('Excel generado ✓');
-}
-
-function exportJSON(){
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`tracker-backup-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();toast('Backup descargado ✓');
-}
-function importData(e){
-  const file=e.target.files[0];if(!file)return;
-  const r=new FileReader();
-  r.onload=ev=>{try{data=JSON.parse(ev.target.result);save();render();toast('Datos importados ✓');}catch(e){toast('Error: archivo inválido');}};
-  r.readAsText(file);e.target.value='';
 }
 
 function buildSel(){
@@ -792,7 +704,8 @@ function buildSel(){
   sel.addEventListener('change',()=>{const[y,m]=sel.value.split('-').map(Number);cy=y;cm=m;editIdx=null;render();});
 }
 document.getElementById('tcInput').addEventListener('input',render);
-buildSel();render();
+buildSel();
+loadFromCloud();
 </script>
 </body>
 </html>
